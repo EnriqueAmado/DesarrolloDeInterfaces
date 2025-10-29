@@ -2,7 +2,7 @@ import tkinter as tk
 
 
 root = tk.Tk()
-root.title("Ejercicio 8 - Frame")
+root.title("Ejercicio8Frame")
 root.geometry("400x200")
 
 
