@@ -32,3 +32,7 @@ class GestorUsuarios:
     def listar(self) -> List[Usuario]:
         """Devuelve la lista de usuarios."""
         return list(self._usuarios)
+
+    def add(self, usuario: Usuario) -> None:
+        """Añade un nuevo usuario a la lista."""
+        self._usuarios.append(usuario)

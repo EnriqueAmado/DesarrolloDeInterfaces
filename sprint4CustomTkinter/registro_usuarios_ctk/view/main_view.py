@@ -10,11 +10,13 @@ class MainView:
         self.root = root
         # callbacks que el controlador asignará
         self.on_seleccionar_usuario: Optional[Callable[[int], None]] = None
+        self.on_exit: Optional[Callable[[], None]] = None
 
         # configurar grid
         root.grid_columnconfigure(0, weight=1)
         root.grid_columnconfigure(1, weight=2)
         root.grid_rowconfigure(0, weight=1)
+        root.grid_rowconfigure(1, weight=0)
 
         # panel izquierdo: lista scrollable
         self.lista_usuarios_frame = ctk.CTkFrame(root)
@@ -47,6 +49,31 @@ class MainView:
         self.lbl_avatar = ctk.CTkLabel(self.detalles_frame, text="Avatar: -")
         self.lbl_avatar.pack(anchor="nw", pady=4)
 
+        # footer: ocupar la segunda fila (row=1) y spanear ambas columnas
+        self.footer_frame = ctk.CTkFrame(root)
+        self.footer_frame.grid(row=1, column=0, columnspan=2, sticky="ew", padx=8, pady=(0, 8))
+
+        # botón Salir a la derecha
+        self.btn_salir = ctk.CTkButton(self.footer_frame, text="Salir", command=self._on_exit_clicked)
+        self.btn_salir.pack(side="right", padx=8, pady=4)
+
+        # botón Añadir a la izquierda
+        self.btn_anadir = ctk.CTkButton(self.footer_frame, text="Añadir")
+        self.btn_anadir.pack(side="left", padx=8, pady=4)
+
+    def _on_exit_clicked(self):
+        if self.on_exit:
+            try:
+                self.on_exit()
+                return
+            except Exception:
+                # si el callback falla, fallback a cerrar la ventana
+                pass
+        try:
+            self.root.destroy()
+        except Exception:
+            pass
+
     def actualizar_lista_usuarios(self, usuarios: List[Usuario], on_seleccionar_callback: Callable[[int], None]):
         """Rellena el CTkScrollableFrame con botones para cada usuario.
         Cada botón llama al callback pasado con el índice del usuario.
@@ -76,3 +103,46 @@ class MainView:
         self.lbl_edad.configure(text=f"Edad: {usuario.edad}")
         self.lbl_genero.configure(text=f"Género: {usuario.genero}")
         self.lbl_avatar.configure(text=f"Avatar: {usuario.avatar or '-'}")
+
+
+class AddUserView:
+    """Ventana modal para añadir un nuevo usuario."""
+
+    def __init__(self, master):
+        self.window = ctk.CTkToplevel(master)
+        self.window.title("Añadir Nuevo Usuario")
+        self.window.geometry("320x300")
+        self.window.grab_set()  # la hace modal
+
+        # campos
+        ctk.CTkLabel(self.window, text="Nombre:").pack(anchor="w", padx=8, pady=(8, 2))
+        self.nombre_entry = ctk.CTkEntry(self.window)
+        self.nombre_entry.pack(fill="x", padx=8, pady=(0, 8))
+
+        ctk.CTkLabel(self.window, text="Edad:").pack(anchor="w", padx=8, pady=(0, 2))
+        self.edad_entry = ctk.CTkEntry(self.window)
+        self.edad_entry.pack(fill="x", padx=8, pady=(0, 8))
+
+        ctk.CTkLabel(self.window, text="Género:").pack(anchor="w", padx=8, pady=(0, 2))
+        self.genero_entry = ctk.CTkEntry(self.window)
+        self.genero_entry.pack(fill="x", padx=8, pady=(0, 8))
+
+        ctk.CTkLabel(self.window, text="Avatar (nombre de archivo en assets/):").pack(anchor="w", padx=8, pady=(0, 2))
+        self.avatar_entry = ctk.CTkEntry(self.window)
+        self.avatar_entry.pack(fill="x", padx=8, pady=(0, 8))
+
+        # botones
+        self.guardar_button = ctk.CTkButton(self.window, text="Guardar")
+        self.guardar_button.pack(side="right", padx=8, pady=12)
+
+        self.cancelar_button = ctk.CTkButton(self.window, text="Cancelar", command=self.window.destroy)
+        self.cancelar_button.pack(side="right", padx=(0, 8), pady=12)
+
+    def get_data(self) -> dict:
+        """Devuelve los valores del formulario como dict."""
+        return {
+            "nombre": self.nombre_entry.get().strip(),
+            "edad": self.edad_entry.get().strip(),
+            "genero": self.genero_entry.get().strip(),
+            "avatar": self.avatar_entry.get().strip(),
+        }
