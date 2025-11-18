@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace = "com.example.mycatalog"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.mycatalog"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -19,19 +19,22 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
+            setProguardFiles(listOf(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
-            )
+            ))
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
 dependencies {
+
+    // Kotlin BOM to align Kotlin library versions
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.22"))
 
     implementation(libs.appcompat)
     implementation(libs.material)
