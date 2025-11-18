@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from typing import Callable, Optional, List
 from registro_usuarios_ctk.model.usuario_model import Usuario
+import tkinter
 
 
 class MainView:
@@ -8,6 +9,12 @@ class MainView:
 
     def __init__(self, root):
         self.root = root
+        # crear la barra de menú (la vista sólo crea los contenedores)
+        self.menubar = tkinter.Menu(root)
+        root.config(menu=self.menubar)
+        self.menu_archivo = tkinter.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="Archivo", menu=self.menu_archivo)
+
         # callbacks que el controlador asignará
         self.on_seleccionar_usuario: Optional[Callable[[int], None]] = None
         self.on_exit: Optional[Callable[[], None]] = None
