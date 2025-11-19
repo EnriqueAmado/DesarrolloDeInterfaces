@@ -13,6 +13,8 @@ class AppController:
         self.gestor = GestorUsuarios()
         self.view = MainView(root)
 
+        self.view.on_eliminar = self.eliminar_usuario_visible
+
         # base dir and assets folder
         self.BASE_DIR = Path(__file__).resolve().parent.parent
         self.ASSETS_PATH = self.BASE_DIR / "assets"
@@ -207,6 +209,26 @@ class AppController:
             add_view.window.destroy()
         except Exception:
             pass
+
+    def eliminar_usuario_visible(self, visible_index: int):
+        """Elimina el usuario seleccionado en la lista visible."""
+        try:
+            real_idx = self._filtered_indexes[visible_index]
+        except Exception:
+            return  # índice inválido
+
+        usuario = self.gestor.get(real_idx)
+        if usuario is None:
+            return
+
+        from tkinter import messagebox
+        if messagebox.askyesno("Confirmar eliminación", f"¿Seguro que quieres eliminar a {usuario.nombre}?"):
+            ok = self.gestor.remove(real_idx)
+            if ok:
+                self.view.set_status(f"Usuario {usuario.nombre} eliminado")
+                self.refrescar_lista_usuarios()
+            else:
+                self.view.set_status("No se pudo eliminar el usuario")
 
     def _autosave_loop(self):
         """Función que corre en un hilo y guarda periódicamente el CSV sin bloquear la UI."""

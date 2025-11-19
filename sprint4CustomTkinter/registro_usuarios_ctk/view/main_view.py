@@ -58,6 +58,10 @@ class MainView:
         self.lista_usuarios_scrollable = ctk.CTkScrollableFrame(self.lista_usuarios_frame)
         self.lista_usuarios_scrollable.pack(fill="both", expand=True, padx=4, pady=4)
 
+        self.on_eliminar: Optional[Callable[[int], None]] = None
+
+        self.selected_index: Optional[int] = None
+
         # panel derecho: detalles
         self.detalles_frame = ctk.CTkFrame(root)
         self.detalles_frame.grid(row=0, column=1, sticky="nsew", padx=8, pady=8)
@@ -94,6 +98,9 @@ class MainView:
         # botón Añadir a la izquierda del centro
         self.btn_anadir = ctk.CTkButton(self.footer_frame, text="Añadir")
         self.btn_anadir.pack(side="right", padx=8, pady=4)
+
+        self.btn_eliminar = ctk.CTkButton(self.footer_frame, text="Eliminar", command=self._on_eliminar_clicked)
+        self.btn_eliminar.pack(side="right", padx=8, pady=4)
 
         self.autosave_var = ctk.BooleanVar(value=False)
         self.autosave_switch = ctk.CTkSwitch(
@@ -137,11 +144,24 @@ class MainView:
             except Exception:
                 pass
 
+    def _usuario_clickeado(self, idx: int, callback: Callable[[int], None]):
+        self.selected_index = idx  # guardamos índice visible
+        callback(idx)
+
+    def _on_eliminar_clicked(self):
+        if self.on_eliminar is not None:
+            if self.selected_index is None:
+                self.set_status("Seleccione un usuario antes de eliminar")
+                return
+            self.on_eliminar(self.selected_index)
+            self.selected_index = None
+
 
     def actualizar_lista_usuarios(self, usuarios: List[Usuario], on_seleccionar_callback: Callable[[int], None], on_double_click_callback: Optional[Callable[[int], None]] = None):
         """Rellena el CTkScrollableFrame con botones para cada usuario.
         Cada botón llama al callback pasado con el índice del usuario.
         """
+        self.selected_index = None
         # limpiar contenido previo
         for child in self.lista_usuarios_scrollable.winfo_children():
             child.destroy()
@@ -150,7 +170,7 @@ class MainView:
             btn = ctk.CTkButton(
                 self.lista_usuarios_scrollable,
                 text=usuario.nombre,
-                command=lambda idx=i: on_seleccionar_callback(idx),
+                command=lambda idx=i: self._usuario_clickeado(idx, on_seleccionar_callback)
             )
             # bind doble clic si nos dieron el callback
             if on_double_click_callback:

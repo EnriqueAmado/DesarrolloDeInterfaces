@@ -39,6 +39,18 @@ class GestorUsuarios:
         """Añade un nuevo usuario a la lista."""
         self._usuarios.append(usuario)
 
+    def get(self, index: int) -> Optional[Usuario]:
+        if 0 <= index < len(self._usuarios):
+            return self._usuarios[index]
+        return None
+
+    def remove(self, index: int) -> bool:
+        """Elimina el usuario en la posición index. Devuelve True si se eliminó, False si no existe."""
+        if 0 <= index < len(self._usuarios):
+            del self._usuarios[index]
+            return True
+        return False
+
     def guardar_csv(self, path: Path) -> None:
         """Guarda los usuarios en CSV en la ruta indicada.
         Formato de columnas: nombre,edad,genero,avatar
