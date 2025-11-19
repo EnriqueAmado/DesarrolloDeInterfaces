@@ -95,6 +95,14 @@ class MainView:
         self.btn_anadir = ctk.CTkButton(self.footer_frame, text="Añadir")
         self.btn_anadir.pack(side="right", padx=8, pady=4)
 
+        self.autosave_var = ctk.BooleanVar(value=False)
+        self.autosave_switch = ctk.CTkSwitch(
+            self.footer_frame, text="Auto-guardar cada 10s",
+            variable=self.autosave_var,
+            command=self._on_toggle_autosave
+        )
+        self.autosave_switch.pack(side="right", padx=8)
+
     def _on_exit_clicked(self):
         if self.on_exit:
             try:
@@ -121,6 +129,14 @@ class MainView:
                 self.on_filter_change(value)
             except Exception:
                 pass
+
+    def _on_toggle_autosave(self):
+        if self.on_toggle_autosave:
+            try:
+                self.on_toggle_autosave(self.autosave_var.get())
+            except Exception:
+                pass
+
 
     def actualizar_lista_usuarios(self, usuarios: List[Usuario], on_seleccionar_callback: Callable[[int], None], on_double_click_callback: Optional[Callable[[int], None]] = None):
         """Rellena el CTkScrollableFrame con botones para cada usuario.
@@ -220,3 +236,6 @@ class AddUserView:
             "genero": self.genero_entry.get().strip(),
             "avatar": self.avatar_entry.get().strip(),
         }
+
+
+

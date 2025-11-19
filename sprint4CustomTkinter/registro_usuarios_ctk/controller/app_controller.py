@@ -3,6 +3,8 @@ from registro_usuarios_ctk.model.usuario_model import GestorUsuarios, Usuario
 from registro_usuarios_ctk.view.main_view import MainView, AddUserView
 from pathlib import Path
 from tkinter import messagebox, PhotoImage
+import threading
+import time
 
 
 class AppController:
@@ -23,12 +25,23 @@ class AppController:
         self.current_filter = "Todos"
         self._filtered_indexes = []  # mapea índice visible -> índice en gestor
 
+        # autosave thread control
+        self._autosave_thread = None
+        self._autosave_stop_event = threading.Event()
+        self.autosave_interval = 10  # segundos
+        self.autosave_running = False
+
         # hook exit handler
         self.view.on_exit = self.on_exit
 
         # connect callbacks from view
         self.view.on_search_change = self.on_search_change
         self.view.on_filter_change = self.on_filter_change
+        # conectar toggle auto-guardado si la vista lo expone
+        try:
+            self.view.on_toggle_autosave = self.toggle_autosave
+        except Exception:
+            pass
 
         # initial population
         self.refrescar_lista_usuarios()
@@ -195,7 +208,52 @@ class AppController:
         except Exception:
             pass
 
+    def _autosave_loop(self):
+        """Función que corre en un hilo y guarda periódicamente el CSV sin bloquear la UI."""
+        while not self._autosave_stop_event.wait(self.autosave_interval):
+            try:
+                self.gestor.guardar_csv(self.CSV_PATH)
+            except Exception as e:
+                # notificar error en la UI thread
+                self.root.after(0, lambda err=e: (messagebox.showerror("Auto-save error", str(err)), self.view.set_status(f"Error auto-guardando: {err}")))
+            else:
+                # notificar éxito en la UI thread
+                self.root.after(0, lambda: self.view.set_status("Auto-guardado: OK"))
+
+    def start_autosave(self):
+        if self.autosave_running:
+            return
+        self._autosave_stop_event.clear()
+        self._autosave_thread = threading.Thread(target=self._autosave_loop, daemon=True)
+        self._autosave_thread.start()
+        self.autosave_running = True
+        self.view.set_status("Auto-guardado activado")
+
+    def stop_autosave(self):
+        if not self.autosave_running:
+            return
+        self._autosave_stop_event.set()
+        # esperar un corto periodo para que el hilo termine si es necesario
+        if self._autosave_thread is not None:
+            self._autosave_thread.join(timeout=2)
+        self.autosave_running = False
+        self.view.set_status("Auto-guardado detenido")
+
+    def toggle_autosave(self, enable: bool = None):
+        """Si enable es None, invierte el estado; si es True/False lo aplica explícitamente."""
+        if enable is None:
+            enable = not self.autosave_running
+        if enable:
+            self.start_autosave()
+        else:
+            self.stop_autosave()
+
     def on_exit(self):
+        # detener autosave si está en marcha
+        try:
+            self.stop_autosave()
+        except Exception:
+            pass
         if messagebox.askokcancel("Exit", "Do you want to exit the application?"):
             try:
                 self.root.destroy()
@@ -220,3 +278,17 @@ class AppController:
         except Exception as e:
             messagebox.showerror("Load error", str(e))
             self.view.set_status(f"Error al cargar: {e}")
+
+    def _autosave_loop(self):
+        """Hilo que guarda CSV cada self.autosave_interval segundos."""
+        while not self._autosave_stop_event.wait(self.autosave_interval):
+            try:
+                self.gestor.guardar_csv(self.CSV_PATH)
+            except Exception as e:
+                # informar error en la UI thread
+                self.root.after(0, lambda err=e: (
+                    messagebox.showerror("Auto-save error", str(err)),
+                    self.view.set_status(f"Error auto-guardando: {err}")
+                ))
+            else:
+                self.root.after(0, lambda: self.view.set_status("Auto-guardado: OK"))
