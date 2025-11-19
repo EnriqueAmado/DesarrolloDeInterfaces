@@ -18,8 +18,17 @@ class AppController:
         # image cache to keep PhotoImage references
         self.avatar_images = {}
 
+        # state for filtering/search
+        self.current_search = ""
+        self.current_filter = "Todos"
+        self._filtered_indexes = []  # mapea índice visible -> índice en gestor
+
         # hook exit handler
         self.view.on_exit = self.on_exit
+
+        # connect callbacks from view
+        self.view.on_search_change = self.on_search_change
+        self.view.on_filter_change = self.on_filter_change
 
         # initial population
         self.refrescar_lista_usuarios()
@@ -48,27 +57,46 @@ class AppController:
             pass
 
     def refrescar_lista_usuarios(self):
-        """Get users from model and update the view with selection callback."""
+        """Get users from model, apply filters, and update the view with callbacks."""
         usuarios = self.gestor.listar()
-        self.view.actualizar_lista_usuarios(usuarios, self.seleccionar_usuario)
 
-    def seleccionar_usuario(self, indice: int):
-        """Callback from view with index of selected user."""
-        usuarios = self.gestor.listar()
+        # apply search and filter to build a visible list and mapping
+        visible = []
+        self._filtered_indexes = []
+        s = self.current_search.strip().lower()
+        f = self.current_filter
+        for idx, u in enumerate(usuarios):
+            if f != "Todos" and u.genero and u.genero.lower() != f.lower():
+                continue
+            if s and s not in u.nombre.lower():
+                continue
+            visible.append(u)
+            self._filtered_indexes.append(idx)
+
+        # update status with counts
+        self.view.set_status(f"Mostrando {len(visible)} de {len(usuarios)} usuarios")
+
+        # pass the visible list and callbacks; double click maps visible index -> real index
+        self.view.actualizar_lista_usuarios(visible, self.seleccionar_usuario_visible, self.editar_usuario_visible)
+
+    def seleccionar_usuario_visible(self, visible_index: int):
+        """Cuando la vista pasa un índice visible, lo convertimos al índice real y mostramos detalles."""
         try:
-            usuario = usuarios[indice]
+            real_idx = self._filtered_indexes[visible_index]
         except Exception:
-            # index invalid: show empty details
+            self.view.mostrar_detalles_usuario(None)
+            return
+        usuario = self.gestor.get(real_idx)
+        if usuario is None:
             self.view.mostrar_detalles_usuario(None)
             return
 
-        # try to load avatar if provided
+        # cargar avatar similar a antes
         if usuario.avatar:
             avatar_path = (self.ASSETS_PATH / usuario.avatar).resolve()
             if avatar_path.exists():
                 try:
                     img = PhotoImage(file=str(avatar_path))
-                    # keep reference
                     self.avatar_images[usuario.avatar] = img
                     try:
                         self.view.lbl_avatar.configure(image=img, text="")
@@ -79,14 +107,60 @@ class AppController:
             else:
                 self.view.lbl_avatar.configure(text=f"Avatar: {usuario.avatar} (not found)")
         else:
-            # remove previous image and show default text
             try:
                 self.view.lbl_avatar.configure(image="", text="Avatar: -")
             except Exception:
                 self.view.lbl_avatar.configure(text="Avatar: -")
 
-        # finally show details (text labels)
+        # finally show details
         self.view.mostrar_detalles_usuario(usuario)
+
+    def editar_usuario_visible(self, visible_index: int):
+        """Abre modal de edición para el usuario visible, actualiza en el modelo y refresca."""
+        try:
+            real_idx = self._filtered_indexes[visible_index]
+        except Exception:
+            return
+        usuario = self.gestor.get(real_idx)
+        if usuario is None:
+            return
+
+        add_view = AddUserView(self.root, usuario=usuario)
+        # conectar guardar para actualizar
+        def do_update():
+            data = add_view.get_data()
+            try:
+                edad = int(data.get("edad", "0"))
+            except ValueError:
+                messagebox.showerror("Edad inválida", "La edad debe ser un entero")
+                return
+            nombre = data.get("nombre")
+            genero = data.get("genero")
+            avatar = data.get("avatar") or None
+            if not nombre:
+                messagebox.showerror("Datos incompletos", "El nombre es obligatorio")
+                return
+            nuevo = Usuario(nombre=nombre, edad=edad, genero=genero, avatar=avatar)
+            ok = self.gestor.update(real_idx, nuevo)
+            if ok:
+                self.view.set_status("Usuario actualizado")
+                self.refrescar_lista_usuarios()
+                try:
+                    add_view.window.destroy()
+                except Exception:
+                    pass
+            else:
+                messagebox.showerror("Error", "No se pudo actualizar el usuario")
+
+        add_view.guardar_button.configure(command=do_update)
+
+    def on_search_change(self, text: str):
+        self.current_search = text
+        self.refrescar_lista_usuarios()
+
+    def on_filter_change(self, value: str):
+        self.current_filter = value
+        self.refrescar_lista_usuarios()
 
     def abrir_ventana_añadir(self):
         """Open the AddUser modal and connect save button."""
@@ -132,13 +206,17 @@ class AppController:
         try:
             self.gestor.guardar_csv(self.CSV_PATH)
             messagebox.showinfo("Saved", f"Users saved to {self.CSV_PATH}")
+            self.view.set_status("Guardado OK")
         except Exception as e:
             messagebox.showerror("Save error", str(e))
+            self.view.set_status(f"Error al guardar: {e}")
 
     def cargar_usuarios(self):
         try:
             self.gestor.cargar_csv(self.CSV_PATH)
             self.refrescar_lista_usuarios()
             messagebox.showinfo("Loaded", f"Users loaded from {self.CSV_PATH}")
+            self.view.set_status("Usuarios cargados")
         except Exception as e:
             messagebox.showerror("Load error", str(e))
+            self.view.set_status(f"Error al cargar: {e}")
