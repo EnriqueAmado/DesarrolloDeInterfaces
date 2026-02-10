@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">Aula+</string>
+    <string name="aula_home">Aula+ (Home)</string>
+
+    <string name="title_login">Iniciar Sesión</string>
+    <string name="hint_email">Correo electrónico</string>
+    <string name="hint_password">Contraseña</string>
+    <string name="btn_login">Entrar</string>
+    <string name="btn_go_to_register">¿No tienes cuenta? Regístrate</string>
+
+    <string name="title_register">Crear Cuenta</string>
+    <string name="btn_register">Registrarse</string>
+    <string name="btn_go_to_login">¿Ya tienes cuenta? Inicia sesión</string>
+    <string name="text_no_account">¿No tienes cuenta?</string>
+    <string name="btn_go_register">Regístrate</string>
+
+    <string name="hint_confirm_password">Repetir contraseña</string>
+    <string name="btn_create_account">Crear cuenta</string>
+    <string name="btn_already_account">Ya tengo cuenta</string>
+
+    <string name="error_empty_fields">Por favor, rellena todos los campos</string>
+    <string name="error_auth_failed">Error en la autenticación</string>
+    <string name="success_register">Usuario creado correctamente</string>
+
+    <string name="desc_logo_aula">Logotipo de Aula Plus</string>
+    <string name="desc_icon_profile">Icono de perfil de usuario</string>
+    <string name="desc_btn_logout">Cerrar sesión</string>
+
+    <string name="hint_title">Título del aviso</string>
+    <string name="hint_subject">Materia (DI, SI, DWES...)</string>
+    <string name="btn_add_notice">Añadir aviso</string>
+    <string name="btn_delete_last">Borrar último</string>
+    <string name="btn_logout">Cerrar sesión</string>
+    <string name="tv_empty_list">Crea un aviso para que se muestre aquí</string>
+    <string name="desc_switch_dark">Cambiar modo noche</string>
+
+
+</resources>

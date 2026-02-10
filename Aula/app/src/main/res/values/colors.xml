@@ -1,0 +1,32 @@
+<resources>
+    <color name="aula_cyan">#00C2FF</color>
+    <color name="aula_dark_blue">#00458E</color>
+    <color name="aula_orange">#FFAE00</color>
+    <color name="aula_green">#8BC34A</color> <color name="md_theme_primary">@color/aula_cyan</color>
+    <color name="md_theme_onPrimary">#FFFFFF</color>
+    <color name="md_theme_primaryContainer">#B3EBFF</color>
+    <color name="md_theme_onPrimaryContainer">#001F29</color>
+
+    <color name="md_theme_secondary">@color/aula_orange</color>
+    <color name="md_theme_onSecondary">#FFFFFF</color>
+    <color name="md_theme_secondaryContainer">#FFDDB3</color>
+    <color name="md_theme_onSecondaryContainer">#291800</color>
+
+    <color name="md_theme_tertiary">@color/aula_green</color>
+    <color name="md_theme_onTertiary">#FFFFFF</color>
+    <color name="md_theme_tertiaryContainer">#D7F0B1</color>
+    <color name="md_theme_onTertiaryContainer">#111F00</color>
+
+    <color name="md_theme_background">#FFFFFF</color>
+    <color name="md_theme_onBackground">#1E1B13</color>
+    <color name="md_theme_surface">#FFFFFF</color>
+    <color name="md_theme_onSurface">#1E1B13</color>
+    <color name="md_theme_error">#BA1A1A</color>
+    <color name="md_theme_onError">#FFFFFF</color>
+    <color name="md_theme_errorContainer">#FFDAD6</color>
+    <color name="md_theme_onErrorContainer">#410002</color>
+
+    <color name="md_theme_outline">#7C7767</color>
+    <color name="md_theme_surfaceVariant">#EAE2D0</color>
+    <color name="md_theme_onSurfaceVariant">#4B4739</color>
+</resources>

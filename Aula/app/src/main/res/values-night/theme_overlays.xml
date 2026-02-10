@@ -1,0 +1,6 @@
+<resources>
+    <style name="ThemeOverlay.App.SecondaryContainer" parent="">
+        <item name="colorSecondaryContainer">@color/md_theme_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/md_theme_onSecondaryContainer</item>
+    </style>
+</resources>
